@@ -73,13 +73,18 @@ const Login = () => {
   };
 
   return (
-    <VStack spacing="10px">
+    <VStack spacing="10px"
+    flexDir="column"
+    h="350px"
+    mb="2"
+    justifyContent="center"
+    alignItems="center">
       <FormControl id="email" isRequired>
-        <FormLabel>Email Address</FormLabel>
+        <FormLabel>Username</FormLabel>
         <Input
           value={email}
           type="email"
-          placeholder="Enter Your Email Address"
+          placeholder="Enter Your Username"
           onChange={(e) => setEmail(e.target.value)}
         />
       </FormControl>
@@ -108,7 +113,7 @@ const Login = () => {
       >
         Login
       </Button>
-      <Button
+      {/* <Button
         variant="solid"
         colorScheme="red"
         width="100%"
@@ -118,7 +123,7 @@ const Login = () => {
         }}
       >
         Get Guest User Credentials
-      </Button>
+      </Button> */}
     </VStack>
   );
 };

@@ -96,9 +96,9 @@ function SideDrawer() {
   };
 
   const accessChat = async (username) => {
-    console.log(username);
-    console.log(user.token);
-
+    
+      console.log(username);
+      console.log(user.token);
     try {
       setLoadingChat(true);
       const config = {
@@ -106,7 +106,9 @@ function SideDrawer() {
           Authorization: `Bearer ${user.token}`,
         },
       };
-      const { data } = await axios.post(`/chat/createchat?username=${username}`, config);
+     
+   
+      const { data } = await axios.post(`/chat/createchat?username=${username}`, {},config);
 
       if (!chats.find((c) => c.id === data.id)) setChats([data, ...chats]);
       setSelectedChat(data); 
@@ -143,17 +145,17 @@ function SideDrawer() {
             </Text>
           </Button>
         </Tooltip>
-        <Text fontSize="2xl" fontFamily="Work sans">
-          Talk-A-Tive
+        <Text fontSize="2xl" fontFamily="Work sans" fontWeight="bold">
+         ConnectiFy
         </Text>
         <div>
           <Menu>
             <MenuButton p={1}>
-              <NotificationBadge
+              {/* <NotificationBadge
                 count={notification.length}
                 effect={Effect.SCALE}
               />
-              <BellIcon fontSize="2xl" m={1} />
+              <BellIcon fontSize="2xl" m={1} /> */}
             </MenuButton>
             <MenuList pl={2}>
               {!notification.length && "No New Messages"}

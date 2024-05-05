@@ -11,17 +11,21 @@ import ProfileModal from "./miscellaneous/ProfileModal";
 import ScrollableChat from "./ScrollableChat";
 import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
+import {over} from "@stomp/stompjs";
+import SockJS from 'sockjs-client';
+import {Stomp} from '@stomp/stompjs';
 
-import io from "socket.io-client";
+
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
 //const ENDPOINT = "http://localhost:8080"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
-//var socket, selectedChatCompare;
+var  selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  const[stompClient,setCtompClient]=useState();
   // const [socketConnected, setSocketConnected] = useState(false);
   // const [typing, setTyping] = useState(false);
   // const [istyping, setIsTyping] = useState(false);
@@ -35,7 +39,15 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       preserveAspectRatio: "xMidYMid slice",
     },
   };
-  const { selectedChat, setSelectedChat, user, notification, setNotification } =
+  const { selectedChat,
+     setSelectedChat,
+      user,
+      userdata,
+       notification, 
+       setNotification,
+       privateStompClient,
+      
+    } =
     ChatState();
 
   const fetchMessages = async () => {
@@ -51,16 +63,53 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       };
 
       setLoading(true);
+    //  setMessages([]);
 
       const { data } = await axios.get(
         `/chat/messages/${selectedChat.id}`,
         config
       );
-      console.log(data);
+     data.forEach(message=> {
+      message.chatId = selectedChat.id;
+  });
       setMessages(data);
+      console.log(data);
       setLoading(false);
 
-      //socket.emit("join chat", selectedChat._id);
+     //const socket = new SockJS('http://localhost:8080/ws');
+     const headers = {
+      Authorization: `Bearer ${user.token}`
+  };
+   
+  const stompClient = Stomp.over(function(){
+    return new SockJS('http://localhost:8080/ws')});
+    setCtompClient(stompClient);
+      stompClient.connect(headers, () => {
+        console.log('Connected to WebSocket server');
+        // Perform STOMP operations only after successful connection
+        stompClient.subscribe(`/specific/private/${selectedChat.id}`, (message) => {
+          console.log('Received message:---->>>>', message.body);
+          const jsonString=message.body;
+          const jsonObject = JSON.parse(jsonString);
+          console.log('chatId:---->>>>', jsonObject.chatId);
+          const receivedMessageChatId=jsonObject.chatId;
+          const msg=jsonObject.message;
+          msg.chatId = receivedMessageChatId;
+          console.log("msgobject==",msg);
+
+          if (
+            selectedChatCompare || // if chat is not selected or doesn't match current chat
+            selectedChatCompare.id == msg.chatId
+          ) {
+            setMessages([...messages, msg]);
+          }
+
+          
+          
+      });
+        
+    });
+      
     } catch (error) {
       toast({
         title: "Error Occured!",
@@ -73,9 +122,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }
   };
 
+
+
   const sendMessage = async (event) => {
     if (event.key === "Enter" && newMessage) {
-      // socket.emit("stop typing", selectedChat._id);
+     
+          // Function to send a message
+
       try {
         const config = {
           headers: {
@@ -84,7 +137,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           },
         };
         setNewMessage("");
-        const { data } = await axios.post(
+        const messagedata= await axios.post(
           "/sendmessage",
           {
             content: newMessage,
@@ -92,8 +145,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           },
           config
         );
-        // socket.emit("new message", data);
-        setMessages([...messages, data]);
+        console.log(messagedata.data)
+
+       stompClient.send(`/app/private/${selectedChat.id}`, {}, JSON.stringify({"message":messagedata.data,"chatId":selectedChat.id}));
+        
+       //setMessages([...messages, messagedata.data]);      
+
       } catch (error) {
         toast({
           title: "Error Occured!",
@@ -107,21 +164,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }
   };
 
-  // useEffect(() => {
-  //   socket = io(ENDPOINT);
-  //   socket.emit("setup", user);
-  //   socket.on("connected", () => setSocketConnected(true));
-  //   socket.on("typing", () => setIsTyping(true));
-  //   socket.on("stop typing", () => setIsTyping(false));
 
-  //   // eslint-disable-next-line
-  // }, []);
 
   useEffect(() => {
     fetchMessages();
 
-  //  selectedChatCompare = selectedChat;
-    // eslint-disable-next-line
+    selectedChatCompare = selectedChat;
+   
   }, [selectedChat]);
 
   // useEffect(() => {
