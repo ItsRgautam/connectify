@@ -18,7 +18,7 @@ import {Stomp} from '@stomp/stompjs';
 
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
-//const ENDPOINT = "http://localhost:8080"; // "https://talk-a-tive.herokuapp.com"; -> After deployment
+const ENDPOINT = "https://chatapplicationproject-production.up.railway.app";
 var  selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
@@ -72,13 +72,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
      setMessages(data);   
      setLoading(false);
 
-     //const socket = new SockJS('http://localhost:8080/ws');
+    
      const headers = {
       Authorization: `Bearer ${user.token}`
   };
    
   const stompClient = Stomp.over(function(){
-    return new SockJS('http://localhost:8080/ws')});
+    return new SockJS(`${ENDPOINT}/ws`)});
     setCtompClient(stompClient);
       stompClient.connect(headers, () => {
         console.log('Connected to WebSocket server');
