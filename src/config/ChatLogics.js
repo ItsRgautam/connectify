@@ -18,13 +18,18 @@ export const isSameSenderMargin = (messages, m, i, userId) => {
 };
 
 export const isSameSender = (messages, m, i, userId) => {
+  try {
   return (
-    
+     
     i < messages.length - 1 &&
-    (messages[i + 1].user.id !== m.user.id ||
-      messages[i + 1].user.id === undefined) &&
-    messages[i].user.id !== userId
+    (messages[i + 1]?.user?.id !== m?.user?.id ||
+      messages[i + 1]?.user?.id === undefined) &&
+    messages[i]?.user?.id !== userId
   );
+}
+catch (error) {
+      
+  }
 };
 
 export const isLastMessage = (messages, i, userId) => {

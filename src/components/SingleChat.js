@@ -37,7 +37,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     animationData: animationData,
     rendererSettings: {
       preserveAspectRatio: "xMidYMid slice",
-    },
+    }, 
   };
   const { selectedChat,
      setSelectedChat,
@@ -63,18 +63,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       };
 
       setLoading(true);
-    //  setMessages([]);
+      setMessages([]);
 
       const { data } = await axios.get(
         `/chat/messages/${selectedChat.id}`,
         config
       );
-     data.forEach(message=> {
-      message.chatId = selectedChat.id;
-  });
-      setMessages(data);
-      console.log(data);
-      setLoading(false);
+     setMessages(data);   
+     setLoading(false);
 
      //const socket = new SockJS('http://localhost:8080/ws');
      const headers = {
@@ -87,24 +83,31 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       stompClient.connect(headers, () => {
         console.log('Connected to WebSocket server');
         // Perform STOMP operations only after successful connection
-        stompClient.subscribe(`/specific/private/${selectedChat.id}`, (message) => {
-          console.log('Received message:---->>>>', message.body);
+        stompClient.subscribe(`/specific/private/${selectedChat.id}`, async (message) => {
+       //   console.log('Received message:---->>>>', message.body);
           const jsonString=message.body;
           const jsonObject = JSON.parse(jsonString);
-          console.log('chatId:---->>>>', jsonObject.chatId);
+        //  console.log('chatId:---->>>>', jsonObject.chatId);
           const receivedMessageChatId=jsonObject.chatId;
           const msg=jsonObject.message;
           msg.chatId = receivedMessageChatId;
-          console.log("msgobject==",msg);
+        //  console.log("msgobject==",msg);
+          
 
           if (
-            selectedChatCompare || // if chat is not selected or doesn't match current chat
-            selectedChatCompare.id == msg.chatId
+            !selectedChat || // if chat is selected and it matches current chat
+            selectedChat.id === msg.chatId
           ) {
-            setMessages([...messages, msg]);
+            const { data } = await axios.get(
+              `/chat/messages/${selectedChat.id}`,
+              config
+            );
+            setMessages([]);
+            setMessages(data); 
+            console.log("execute");
           }
 
-          
+       
           
       });
         
@@ -172,7 +175,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     selectedChatCompare = selectedChat;
    
   }, [selectedChat]);
-
+ 
   // useEffect(() => {
   //   socket.on("message recieved", (newMessageRecieved) => {
   //     if (

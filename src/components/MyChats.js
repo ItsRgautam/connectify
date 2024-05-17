@@ -41,6 +41,10 @@ const MyChats = ({ fetchAgain }) => {
       });
     }
   };
+  //fetchChats();
+
+// Call fetchChats every 2 seconds
+//const intervalId = setInterval(fetchChats, 1000);
 
   useEffect(() => {
     setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
